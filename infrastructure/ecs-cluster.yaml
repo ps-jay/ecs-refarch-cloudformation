@@ -53,7 +53,7 @@ Mappings:
         us-east-1:
             AMI: ami-a7a242da
         us-west-2:
-            AMI: ami-92e06fea
+            AMI: ami-40ddb938
         us-west-1:
             AMI: ami-9ad4dcfa
         eu-west-3:
