@@ -23,10 +23,6 @@ Resources:
         Properties: 
             VpcId: !Ref VPC
             GroupDescription: Access to the ECS hosts and the tasks/containers that run on them
-            SecurityGroupIngress:
-                # Only allow inbound access to ECS from the ELB
-                - SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup 
-                  IpProtocol: -1
             Tags: 
                 - Key: Name
                   Value: !Sub ${EnvironmentName}-ECS-Hosts
