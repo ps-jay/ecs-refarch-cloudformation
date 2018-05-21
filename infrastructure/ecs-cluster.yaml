@@ -12,8 +12,12 @@ Parameters:
         Description: Which instance type should we use to build the ECS cluster?
         Type: String
 
-    ClusterSize:
-        Description: How many ECS hosts do you want to initially deploy?
+    MinSize:
+        Description: How many ECS hosts do you want as a minimum?
+        Type: Number
+
+    MaxSize:
+        Description: How many ECS hosts do you want as a maximum?
         Type: Number
 
     VPC:
@@ -89,9 +93,8 @@ Resources:
         Properties:
             VPCZoneIdentifier: !Ref Subnets
             LaunchConfigurationName: !Ref ECSLaunchConfiguration
-            MinSize: !Ref ClusterSize
-            MaxSize: !Ref ClusterSize
-            DesiredCapacity: !Ref ClusterSize
+            MinSize: !Ref MinSize
+            MaxSize: !Ref MaxSize
             Tags:
                 - Key: Name
                   Value: !Sub ${EnvironmentName} ECS host
