@@ -98,6 +98,9 @@ Resources:
                 - Key: Name
                   Value: !Sub ${EnvironmentName} ECS host
                   PropagateAtLaunch: true
+                - Key: spot-enabled
+                  Value: true
+                  PropagateAtLaunch: false
         CreationPolicy:
             ResourceSignal:
                 Timeout: PT15M
