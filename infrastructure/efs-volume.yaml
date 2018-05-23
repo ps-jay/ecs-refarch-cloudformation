@@ -1,0 +1,93 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  SubnetA:
+    Description: Choose the subnet for AZ a
+    Type: AWS::EC2::Subnet::Id
+  SubnetB:
+    Description: Choose the subnet for AZ b
+    Type: AWS::EC2::Subnet::Id
+  SubnetC:
+    Description: Choose the subnet for AZ c
+    Type: AWS::EC2::Subnet::Id
+  VolumeName:
+    Description: The name to be used for the EFS volume
+    Type: String
+    MinLength: '1'
+    Default: myEFSvolume
+  VPC:
+    Description: The VPC that will allow access to EFS
+    Type: AWS::EC2::VPC::Id
+Resources:
+  MountTargetSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId:
+        Ref: VPC
+      GroupDescription: Security group for mount target
+  FileSystem:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      PerformanceMode: generalPurpose
+      FileSystemTags:
+      - Key: Name
+        Value:
+          Ref: VolumeName
+  MountTargetA:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId:
+        Ref: FileSystem
+      SubnetId:
+        Ref: SubnetA
+      SecurityGroups:
+      - Ref: MountTargetSecurityGroup
+  MountTargetB:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId:
+        Ref: FileSystem
+      SubnetId:
+        Ref: SubnetB
+      SecurityGroups:
+      - Ref: MountTargetSecurityGroup
+  MountTargetC:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId:
+        Ref: FileSystem
+      SubnetId:
+        Ref: SubnetC
+      SecurityGroups:
+      - Ref: MountTargetSecurityGroup
+Outputs:
+  MountTargetIDa:
+    Description: Mount target ID for AZ a
+    Value:
+      Ref: MountTargetA
+    Export:
+      Name: !Sub "EFS-MTa-${VolumeName}"
+  MountTargetIDb:
+    Description: Mount target ID for AZ b
+    Value:
+      Ref: MountTargetB
+    Export:
+      Name: !Sub "EFS-MTb-${VolumeName}"
+  MountTargetIDc:
+    Description: Mount target ID for AZ c
+    Value:
+      Ref: MountTargetC
+    Export:
+      Name: !Sub "EFS-MTc-${VolumeName}"
+  FileSystemID:
+    Description: File system ID
+    Value:
+      Ref: FileSystem
+    Export:
+      Name: !Sub "EFS-FS-${VolumeName}"
+  SecurityGroupID:
+    Description: Security group ID
+    Value:
+      Ref: MountTargetSecurityGroup
+    Export:
+      Name: !Sub "EFS-SG-${VolumeName}"
