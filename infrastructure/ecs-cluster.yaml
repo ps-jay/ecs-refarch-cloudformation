@@ -46,6 +46,10 @@ Parameters:
         Description: The export name of the EFS Mount Target Security Group
         Type: String
 
+    EIPAllocation:
+        Description: The eipalloc of the EIP to attach
+        Type: String
+
 Mappings:
 
     # These are the latest ECS optimized AMIs as of Feb 2018:
@@ -144,15 +148,19 @@ Resources:
                     - |
                       #!/bin/bash
                       set -euxo pipefail
-                      yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
-                      yum install -y aws-cfn-bootstrap amazon-efs-utils hibagent
                       yum update -y
+                      yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+                      yum install -y aws-cfn-bootstrap amazon-efs-utils jq
                       /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
-                      mkdir /efs
-                      mount -t efs ${EFSID}:/ /efs
+
+                      mkdir /mail-efs
+                      mount -t efs ${EFSID}:/ /mail-efs
+
                       set +e
                       /opt/aws/bin/cfn-signal -e 0 --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSAutoScalingGroup
-                      /usr/bin/enable-ec2-spot-hibernation
+
+                      /usr/local/sbin/attach_ip.sh
+                      nohup /usr/local/sbin/label_ecs.sh > /tmp/label_ecs.log &
                     - EFSID:
                         Fn::ImportValue: !Ref EFSFileSystem
 
@@ -167,6 +175,77 @@ Resources:
                         01_add_instance_to_cluster:
                             command: !Sub echo ECS_CLUSTER=${ECSCluster} >> /etc/ecs/ecs.config
                     files:
+                        "/usr/local/sbin/attach_ip.sh":
+                            mode: 000500
+                            owner: root
+                            group: root
+                            content: !Sub |
+                                #!/bin/bash -e
+
+                                set -uo pipefail
+
+                                INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+                                echo "INFO: I am EC2 instance, with ID ${!INSTANCE_ID}"
+
+                                SUCCESS="no"
+                                for i in {1..40}; do
+                                    EIP=$(aws ec2 --region ${AWS::Region} describe-addresses --allocation-ids ${EIPAllocation})
+
+                                    if [[ $(echo ${!EIP} | grep AssociationId) == "" ]]; then
+                                        # IP isn't associated ... grab the IP
+                                        echo "INFO: The EIP isn't associated, I'm going to associate with it"
+                                        aws ec2 --region ${AWS::Region} associate-address \
+                                            --allocation-id ${EIPAllocation} \
+                                            --instance-id ${!INSTANCE_ID} \
+                                            --no-allow-reassociation
+                                    else
+                                        # the IP is allocated, is it this machine?
+                                        if [[ $(echo ${!EIP} | grep ${!INSTANCE_ID}) != "" ]] ; then
+                                            echo "INFO: I got the EIP, I now have $(echo ${!EIP} | jq .Addresses | grep PublicIp)"
+                                            SUCCESS="yes"
+                                            break
+                                        else
+                                            echo "WARNING: Some other EC2 has the EIP, waiting to try again"
+                                            sleep 30
+                                        fi
+                                    fi
+                                done
+
+                                if [[ ${!SUCCESS} != "yes" ]]; then
+                                    # terminal condition
+                                    echo "FATAL: I didn't end up with the EIP, terminating myself"
+                                    aws ec2 --region ${AWS::Region} terminate-instances \
+                                        --instance-ids ${!INSTANCE_ID}
+                                fi
+
+                        "/usr/local/sbin/label_ecs.sh":
+                            mode: 000500
+                            owner: root
+                            group: root
+                            content: !Sub |
+                                #!/bin/bash -e
+
+                                set -uo pipefail
+
+                                for i in {1..10}; do
+                                    set +e
+                                    ECSID=$(curl -s http://localhost:51678/v1/metadata | jq .ContainerInstanceArn)
+                                    set -e
+
+                                    if [[ ${!ECSID} == '' ]]; then
+                                        # wait a little longer for the local ecs-agent container
+                                        echo -n "."
+                                        sleep 10
+                                    else
+                                        echo ""
+                                        break
+                                    fi
+                                done
+
+                                aws ecs --region ${AWS::Region} put-attributes \
+                                    --attributes name=hasPublicIp,value=yes,targetId=${!ECSID} \
+                                    --cluster ${ECSCluster}
+
                         "/etc/cfn/cfn-hup.conf":
                             mode: 000400
                             owner: root
@@ -205,6 +284,12 @@ Resources:
                                 log_group_name = ${ECSCluster}-/var/log/messages
                                 log_stream_name = ${ECSCluster}
                                 datetime_format = %b %d %H:%M:%S
+
+                                [/var/log/cloud-init-output.log]
+                                file = /var/log/cloud-init-output.log
+                                log_group_name = ${ECSCluster}-/var/log/cloud-init-output.log
+                                log_stream_name = ${ECSCluster}
+                                datetime_format = %Y-%m-%dT%H:%M:%SZ
 
                                 [/var/log/docker]
                                 file = /var/log/docker
@@ -279,6 +364,7 @@ Resources:
                                 "ecs:DeregisterContainerInstance",
                                 "ecs:DiscoverPollEndpoint",
                                 "ecs:Poll",
+                                "ecs:PutAttributes",
                                 "ecs:RegisterContainerInstance",
                                 "ecs:StartTelemetrySession",
                                 "ecs:Submit*",
@@ -308,6 +394,8 @@ Resources:
                                 "ec2messages:GetMessages",
                                 "ec2messages:SendReply",
                                 "cloudwatch:PutMetricData",
+                                "ec2:AssociateAddress",
+                                "ec2:DescribeAddresses",
                                 "ec2:DescribeInstanceStatus",
                                 "ds:CreateComputer",
                                 "ds:DescribeDirectories",
