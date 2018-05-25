@@ -16,8 +16,11 @@ Parameters:
 
     ECSAMI:
         Description: The AMI ID of the ECS optimised Amazon Linux AMI
-        Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
-        Default: /aws/service/ecs/optimized-ami/amazon-linux/recommended/image_id
+        Type: String
+
+        # It might be nice to play around with the automation below ...
+        #Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+        #Default: /aws/service/ecs/optimized-ami/amazon-linux/recommended/image_id
 
     MinSize:
         Description: How many ECS hosts do you want as a minimum?
