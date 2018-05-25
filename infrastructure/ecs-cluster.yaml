@@ -150,7 +150,13 @@ Resources:
                       set -euxo pipefail
                       yum update -y
                       yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
-                      yum install -y aws-cfn-bootstrap amazon-efs-utils jq
+                      yum install -y aws-cfn-bootstrap amazon-efs-utils jq yum-utils
+
+                      needs-restarting -r
+                      if [[ ${?} -ne 0 ]]; then
+                          shutdown -r now
+                      fi
+
                       /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
 
                       mkdir /mail-efs
