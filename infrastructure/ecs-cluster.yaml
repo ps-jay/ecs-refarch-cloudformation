@@ -112,22 +112,26 @@ Resources:
                       #!/bin/bash
                       set -euxo pipefail
 
-                      echo "${ECSAMI}" > /etc/created-from-ami-id
-
-                      yum update -y
-                      yum install -y \
-                          https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm \
-                          aws-cfn-bootstrap \
-                          amazon-efs-utils \
-                          jq \
-                          yum-utils
+                      if [[ ! -f /etc/updated-in-userdata ]]; then
+                          yum update -y
+                          yum install -y \
+                              https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm \
+                              aws-cfn-bootstrap \
+                              amazon-efs-utils \
+                              jq \
+                              yum-utils
+                      fi
+                      touch /etc/updated-in-userdata
 
                       set +e
                       needs-restarting -r
                       if [[ ${!?} -ne 0 ]]; then
                           rm /var/lib/cloud/instance/sem/config_scripts_user
+                          touch /etc/updated-in-userdata
                           shutdown -r now
+                          sleep 60  # allow shutdown to proceed
                       fi
+                      rm /etc/updated-in-userdata
                       set -e
 
                       /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
@@ -355,6 +359,7 @@ Resources:
                                 "ecs:CreateCluster",
                                 "ecs:DeregisterContainerInstance",
                                 "ecs:DiscoverPollEndpoint",
+                                "ecs:ListAttributes",
                                 "ecs:Poll",
                                 "ecs:PutAttributes",
                                 "ecs:RegisterContainerInstance",
@@ -370,7 +375,9 @@ Resources:
                                 "ssm:GetDeployablePatchSnapshotForInstance",
                                 "ssm:GetDocument",
                                 "ssm:GetManifest",
+                                "ssm:GetParameter",
                                 "ssm:GetParameters",
+                                "ssm:GetParameterHistory",
                                 "ssm:ListAssociations",
                                 "ssm:ListInstanceAssociations",
                                 "ssm:PutInventory",
