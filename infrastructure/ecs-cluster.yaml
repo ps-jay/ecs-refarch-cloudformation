@@ -109,8 +109,12 @@ Resources:
                       #!/bin/bash
                       set -euxo pipefail
                       yum update -y
-                      yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
-                      yum install -y aws-cfn-bootstrap amazon-efs-utils jq yum-utils
+                      yum install -y \
+                          https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm \
+                          aws-cfn-bootstrap \
+                          amazon-efs-utils \
+                          jq \
+                          yum-utils
 
                       set +e
                       needs-restarting -r
