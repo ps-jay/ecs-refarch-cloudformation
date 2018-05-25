@@ -25,6 +25,9 @@ Resources:
       VpcId:
         Ref: VPC
       GroupDescription: Security group for mount target
+      Tags: 
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-MountTarget
   FileSystem:
     Type: AWS::EFS::FileSystem
     Properties:
