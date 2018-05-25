@@ -1,3 +1,5 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
 Description: >
     This template deploys an ECS cluster to the provided VPC and subnets
     using an Auto Scaling Group
@@ -35,6 +37,14 @@ Parameters:
     KeyPair:
         Description: Select the Key Pair to use for the ECS cluster hosts
         Type: AWS::EC2::KeyPair::KeyName
+
+    EFSFileSystem:
+        Description: The export name of the EFS filesystem to use
+        Type: String
+
+    EFSSecurityGroup:
+        Description: The export name of the EFS Mount Target Security Group
+        Type: String
 
 Mappings:
 
@@ -129,14 +139,22 @@ Resources:
                 - !Ref SecurityGroup
             IamInstanceProfile: !Ref ECSInstanceProfile
             UserData:
-                "Fn::Base64": !Sub |
-                    #!/bin/bash
-                    yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
-                    yum install -y aws-cfn-bootstrap hibagent
-                    yum update -y
-                    /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
-                    /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSAutoScalingGroup
-                    /usr/bin/enable-ec2-spot-hibernation
+                Fn::Base64:
+                  Fn::Sub:
+                    - |
+                      #!/bin/bash
+                      set -euxo pipefail
+                      yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+                      yum install -y aws-cfn-bootstrap amazon-efs-utils hibagent
+                      yum update -y
+                      /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
+                      mkdir /efs
+                      mount -t efs ${EFSID}:/ /efs
+                      set +e
+                      /opt/aws/bin/cfn-signal -e 0 --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSAutoScalingGroup
+                      /usr/bin/enable-ec2-spot-hibernation
+                    - EFSID:
+                        Fn::ImportValue: !Ref EFSFileSystem
 
         Metadata:
             AWS::CloudFormation::Init:
@@ -341,6 +359,17 @@ Resources:
                       - ecs:DescribeServices
                       - ecs:UpdateService
                       Resource: "*"
+
+    EFSSGIngress:
+        Type: "AWS::EC2::SecurityGroupIngress"
+        Properties:
+            GroupId:
+              Fn::ImportValue: !Ref EFSSecurityGroup
+            FromPort: 2049
+            ToPort: 2049
+            IpProtocol: tcp
+            SourceSecurityGroupId: !Ref SecurityGroup
+            Description: Allow traffic from ECS
 
 Outputs:
 
