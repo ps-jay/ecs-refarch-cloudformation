@@ -153,7 +153,7 @@ Resources:
                       yum install -y aws-cfn-bootstrap amazon-efs-utils jq yum-utils
 
                       needs-restarting -r
-                      if [[ ${?} -ne 0 ]]; then
+                      if [[ ${!?} -ne 0 ]]; then
                           shutdown -r now
                       fi
 
