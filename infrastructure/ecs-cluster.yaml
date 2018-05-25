@@ -127,7 +127,6 @@ Resources:
                       needs-restarting -r
                       if [[ ${!?} -ne 0 ]]; then
                           rm /var/lib/cloud/instance/sem/config_scripts_user
-                          touch /etc/updated-in-userdata
                           shutdown -r now
                           sleep 60  # allow shutdown to proceed
                       fi
