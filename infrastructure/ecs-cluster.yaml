@@ -159,7 +159,7 @@ Resources:
                       set +e
                       /opt/aws/bin/cfn-signal -e 0 --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSAutoScalingGroup
 
-                      /usr/local/sbin/attach_ip.sh
+                      /usr/local/sbin/attach_ip.sh && \
                       nohup /usr/local/sbin/label_ecs.sh > /tmp/label_ecs.log &
                     - EFSID:
                         Fn::ImportValue: !Ref EFSFileSystem
@@ -216,6 +216,7 @@ Resources:
                                     echo "FATAL: I didn't end up with the EIP, terminating myself"
                                     aws ec2 --region ${AWS::Region} terminate-instances \
                                         --instance-ids ${!INSTANCE_ID}
+                                    exit 1
                                 fi
 
                         "/usr/local/sbin/label_ecs.sh":
@@ -397,6 +398,7 @@ Resources:
                                 "ec2:AssociateAddress",
                                 "ec2:DescribeAddresses",
                                 "ec2:DescribeInstanceStatus",
+                                "ec2:TerminateInstances",
                                 "ds:CreateComputer",
                                 "ds:DescribeDirectories",
                                 "logs:CreateLogGroup",
