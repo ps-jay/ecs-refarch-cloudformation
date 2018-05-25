@@ -108,6 +108,9 @@ Resources:
                     - |
                       #!/bin/bash
                       set -euxo pipefail
+
+                      echo "${ECSAMI}" > /etc/created-from-ami-id
+
                       yum update -y
                       yum install -y \
                           https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm \
