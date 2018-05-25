@@ -247,6 +247,18 @@ Resources:
                                     --attributes name=hasPublicIp,value=yes,targetId=${!ECSID} \
                                     --cluster ${ECSCluster}
 
+                        "/etc/cron.weekly/terminate_myself":
+                            mode: 000500
+                            owner: root
+                            group: root
+                            content: !Sub |
+                                #!/bin/bash -e
+
+                                INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+
+                                aws ec2 --region ${AWS::Region} terminate-instances \
+                                    --instance-ids ${!INSTANCE_ID}
+
                         "/etc/cfn/cfn-hup.conf":
                             mode: 000400
                             owner: root
