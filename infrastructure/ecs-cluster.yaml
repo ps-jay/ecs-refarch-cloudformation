@@ -112,10 +112,13 @@ Resources:
                       yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
                       yum install -y aws-cfn-bootstrap amazon-efs-utils jq yum-utils
 
+                      set +e
                       needs-restarting -r
                       if [[ ${!?} -ne 0 ]]; then
+                          rm /var/lib/cloud/instance/sem/config_scripts_user
                           shutdown -r now
                       fi
+                      set -e
 
                       /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
 
