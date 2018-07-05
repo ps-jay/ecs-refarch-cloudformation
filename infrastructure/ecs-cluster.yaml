@@ -142,7 +142,7 @@ Resources:
                       # fix awslogs config
                       INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
                       sed -i -e s/${ECSCluster}$/${!INSTANCE_ID}/g /etc/awslogs/awslogs.conf
-                      service awslogs start
+                      service awslogs restart
 
                       mkdir /mail-efs
                       mount -t efs ${EFSID}:/ /mail-efs
