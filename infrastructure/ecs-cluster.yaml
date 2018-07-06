@@ -118,7 +118,13 @@ Resources:
                               https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm \
                               aws-cfn-bootstrap \
                               amazon-efs-utils \
+                              git \
                               jq \
+                              man-db \
+                              mosh \
+                              rsync \
+                              screen \
+                              vim-enhanced \
                               yum-utils
                       fi
                       touch /etc/updated-in-userdata
