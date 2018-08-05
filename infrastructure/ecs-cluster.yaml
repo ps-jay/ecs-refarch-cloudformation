@@ -132,6 +132,7 @@ Resources:
                       # We will be hosting a mail-server on this machine with docker run --net=host
                       # sendmail gets in the way
                       chkconfig sendmail off
+                      service sendmail stop
 
                       set +e
                       needs-restarting -r
