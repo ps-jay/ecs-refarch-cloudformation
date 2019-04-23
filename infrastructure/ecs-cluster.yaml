@@ -397,6 +397,8 @@ Resources:
                                 "ecs:Submit*",
                                 "logs:CreateLogStream",
                                 "logs:PutLogEvents",
+                                "cloudformation:SignalResource",
+                                "cloudformation:DescribeStackResource",
                                 "ecr:BatchCheckLayerAvailability",
                                 "ecr:BatchGetImage",
                                 "ecr:GetDownloadUrlForLayer",
