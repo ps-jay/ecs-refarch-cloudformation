@@ -146,11 +146,12 @@ Resources:
                       set -e
 
                       /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
+                      systemctl enable awslogsd.service
 
                       # fix awslogs config
                       INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
                       sed -i -e s/${ECSCluster}$/${!INSTANCE_ID}/g /etc/awslogs/awslogs.conf
-                      service awslogs restart
+                      systemctl restart awslogsd.service
 
                       mkdir /mail-efs
                       mount -t efs ${EFSID}:/ /mail-efs
@@ -324,16 +325,6 @@ Resources:
                                 log_group_name = ${ECSCluster}-/var/log/ecs/audit.log
                                 log_stream_name = ${ECSCluster}
                                 datetime_format = %Y-%m-%dT%H:%M:%SZ
-
-                    services:
-                        sysvinit:
-                            awslogs:
-                                enabled: true
-                                # Start it after the `sed` in UserData
-                                ensureRunning: false
-                                files:
-                                    - /etc/awslogs/awslogs.conf
-                                    - /etc/awslogs/awscli.conf
 
     # This IAM Role is attached to all of the ECS hosts. It is based on the default role
     # published here:
