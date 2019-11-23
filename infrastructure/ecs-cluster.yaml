@@ -371,7 +371,7 @@ Resources:
                                 "logs:CreateLogStream",
                                 "logs:PutLogEvents",
                                 "cloudformation:SignalResource",
-                                "cloudformation:DescribeStackResource",
+                                "cloudformation:Describe*",
                                 "ecr:BatchCheckLayerAvailability",
                                 "ecr:BatchGetImage",
                                 "ecr:GetDownloadUrlForLayer",
