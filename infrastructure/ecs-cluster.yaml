@@ -145,9 +145,6 @@ Resources:
                       rm /etc/updated-in-userdata
                       set -e
 
-                      # instance profile not immediately available?...
-                      sleep 5
-                      curl --fail --silent --show-error http://169.254.169.254/latest/meta-data/iam/security-credentials/${EnvironmentName}-ECSRole-${AWS::Region} && echo
                       /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
                       systemctl enable awslogsd.service
 
