@@ -145,6 +145,19 @@ Resources:
                       rm /etc/updated-in-userdata
                       set -e
 
+                      set +e
+                      aws cloudformation describe-stack-resource --stack-name ${AWS::StackName} --logical-resource-id ECSLaunchConfiguration --region ${AWS::Region}
+                      if [[ $? -ne 0 ]] ; then
+                          echo "describe resources didn't work, wait and try again"
+                          sleep 30
+                          aws cloudformation describe-stack-resource --stack-name ${AWS::StackName} --logical-resource-id ECSLaunchConfiguration --region ${AWS::Region}
+                          if [[ $? -ne 0 ]] ; then
+                              echo "describe resources didn't work, wait and try again"
+                              sleep 30
+                          fi
+                      fi
+                      set -e    
+
                       /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
                       systemctl enable awslogsd.service
 
