@@ -159,7 +159,7 @@ Resources:
                       fi
                       set -e    
 
-                      /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
+                      /opt/aws/bin/cfn-init -v --role ${ECSRole} --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
                       systemctl enable awslogsd.service
 
                       # fix awslogs config
@@ -171,7 +171,7 @@ Resources:
                       mount -t efs ${EFSID}:/ /mail-efs
 
                       set +e
-                      /opt/aws/bin/cfn-signal -e 0 --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSAutoScalingGroup
+                      /opt/aws/bin/cfn-signal -e 0 --role ${ECSRole} ${--region ${AWS::Region} --stack ${AWS::StackName} --resource ECSAutoScalingGroup
 
                       /usr/local/sbin/attach_ip.sh && \
                       nohup /usr/local/sbin/label_ecs.sh > /tmp/label_ecs.log &
