@@ -13,6 +13,7 @@
                 - "autoscaling:AttachInstances"
                 - "autoscaling:DetachInstances"
                 - "autoscaling:DescribeTags"
+                - "autoscaling:TerminateInstanceInAutoScalingGroup"
                 - "autoscaling:UpdateAutoScalingGroup"
                 - "cloudformation:DescribeStacks"
                 - "ec2:CreateTags"
