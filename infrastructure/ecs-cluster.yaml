@@ -173,7 +173,6 @@ Resources:
                       nohup /usr/local/sbin/label_ecs.sh > /tmp/label_ecs.log &
                     - EFSID:
                         Fn::ImportValue: !Ref EFSFileSystem
-                    - ECSRole: !Ref ECSRole
 
         Metadata:
             AWS::CloudFormation::Init:
