@@ -16,7 +16,7 @@ Parameters:
 
     ECSAMI:
         Description: The AMI ID of the ECS optimised Amazon Linux AMI
-        Type: String
+        Type: AWS::EC2::Image::Id
 
         # It might be nice to play around with the automation below ...
         #Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
@@ -29,10 +29,6 @@ Parameters:
     MaxSize:
         Description: How many ECS hosts do you want as a maximum?
         Type: Number
-
-    VPC:
-        Description: Choose which VPC this ECS cluster should be deployed to
-        Type: AWS::EC2::VPC::Id
 
     Subnets:
         Description: Choose which subnets this ECS cluster should be deployed to
@@ -77,7 +73,7 @@ Resources:
                   Value: !Sub ${EnvironmentName} ECS host
                   PropagateAtLaunch: true
                 - Key: spot-enabled
-                  Value: true
+                  Value: 'true'
                   PropagateAtLaunch: false
         CreationPolicy:
             ResourceSignal:
@@ -171,7 +167,7 @@ Resources:
                       mount -t efs ${EFSID}:/ /mail-efs
 
                       set +e
-                      /opt/aws/bin/cfn-signal -e 0 --role ${ECSRole} ${--region ${AWS::Region} --stack ${AWS::StackName} --resource ECSAutoScalingGroup
+                      /opt/aws/bin/cfn-signal -e 0 --role ${ECSRole} --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSAutoScalingGroup
 
                       /usr/local/sbin/attach_ip.sh && \
                       nohup /usr/local/sbin/label_ecs.sh > /tmp/label_ecs.log &
@@ -276,7 +272,7 @@ Resources:
                             mode: '000644'
                             owner: root
                             group: root
-                            content: !Sub |
+                            content: |
                                 MAILTO=""
                                 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
