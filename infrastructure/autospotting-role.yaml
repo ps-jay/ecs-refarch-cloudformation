@@ -14,6 +14,7 @@
                 - "autoscaling:DetachInstances"
                 - "autoscaling:DescribeTags"
                 - "autoscaling:UpdateAutoScalingGroup"
+                - "cloudformation:DescribeStacks"
                 - "ec2:CreateTags"
                 - "ec2:DescribeInstances"
                 - "ec2:DescribeRegions"
