@@ -8,11 +8,9 @@
           Statement:
             -
               Action:
-                - "autoscaling:DescribeAutoScalingGroups"
-                - "autoscaling:DescribeLaunchConfigurations"
+                - "autoscaling:Describe*"
                 - "autoscaling:AttachInstances"
                 - "autoscaling:DetachInstances"
-                - "autoscaling:DescribeTags"
                 - "autoscaling:TerminateInstanceInAutoScalingGroup"
                 - "autoscaling:UpdateAutoScalingGroup"
                 - "cloudformation:DescribeStacks"
